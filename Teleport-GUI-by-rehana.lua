@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 
 local mutedPlayers = {}
 local speedEnabled = false
-local speedMultiplier = 1
+local targetSpeed = 16
 
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
 ScreenGui.ResetOnSpawn = false
@@ -58,21 +58,21 @@ TabFrame.Position = UDim2.new(0, 0, 0, 35)
 TabFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 
 local TeleportTab = Instance.new("TextButton", TabFrame)
-TeleportTab.Size = UDim2.new(1/3, 0, 1, 0)
+TeleportTab.Size = UDim2.new(0.33, 0, 1, 0)
 TeleportTab.Text = "Teleport"
 TeleportTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 TeleportTab.TextColor3 = Color3.new(1,1,1)
 
 local MuteTab = Instance.new("TextButton", TabFrame)
-MuteTab.Size = UDim2.new(1/3, 0, 1, 0)
-MuteTab.Position = UDim2.new(1/3, 0, 0, 0)
+MuteTab.Size = UDim2.new(0.33, 0, 1, 0)
+MuteTab.Position = UDim2.new(0.33, 0, 0, 0)
 MuteTab.Text = "Mute"
 MuteTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MuteTab.TextColor3 = Color3.new(1,1,1)
 
 local SpeedTab = Instance.new("TextButton", TabFrame)
-SpeedTab.Size = UDim2.new(1/3, 0, 1, 0)
-SpeedTab.Position = UDim2.new(2/3, 0, 0, 0)
+SpeedTab.Size = UDim2.new(0.34, 0, 1, 0)
+SpeedTab.Position = UDim2.new(0.66, 0, 0, 0)
 SpeedTab.Text = "Speed"
 SpeedTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 SpeedTab.TextColor3 = Color3.new(1,1,1)
@@ -84,34 +84,48 @@ PlayerList.Position = UDim2.new(0, 0, 0, 65)
 PlayerList.BackgroundTransparency = 1
 PlayerList.CanvasSize = UDim2.new(0,0,0,0)
 PlayerList.ScrollBarThickness = 4
-PlayerList.Visible = true
 
 local UIList = Instance.new("UIListLayout", PlayerList)
 UIList.Padding = UDim.new(0, 4)
 UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    PlayerList.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + 10)
+    PlayerList.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y + 10)
 end)
 
--- Speed Settings Frame
+-- Speed frame
 local SpeedFrame = Instance.new("Frame", MainFrame)
-SpeedFrame.Size = UDim2.new(1, -20, 1, -80)
-SpeedFrame.Position = UDim2.new(0, 10, 0, 70)
-SpeedFrame.BackgroundTransparency = 1
+SpeedFrame.Size = UDim2.new(1, -20, 0, 80)
+SpeedFrame.Position = UDim2.new(0, 10, 0, 65)
+SpeedFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SpeedFrame.Visible = false
+Instance.new("UICorner", SpeedFrame).CornerRadius = UDim.new(0, 8)
 
-local ToggleBtn = Instance.new("TextButton", SpeedFrame)
-ToggleBtn.Size = UDim2.new(1, 0, 0, 40)
-ToggleBtn.Text = "Speed: OFF"
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ToggleBtn.TextColor3 = Color3.new(1,1,1)
+local SpeedLabel = Instance.new("TextLabel", SpeedFrame)
+SpeedLabel.Size = UDim2.new(1, 0, 0, 25)
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Text = "Set Speed:"
+SpeedLabel.TextColor3 = Color3.new(1,1,1)
+SpeedLabel.Font = Enum.Font.GothamBold
+SpeedLabel.TextSize = 14
 
 local SpeedBox = Instance.new("TextBox", SpeedFrame)
-SpeedBox.Size = UDim2.new(1, 0, 0, 40)
-SpeedBox.Position = UDim2.new(0, 0, 0, 50)
-SpeedBox.PlaceholderText = "Enter Speed Multiplier (ex: 2)"
-SpeedBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SpeedBox.Size = UDim2.new(1, -20, 0, 30)
+SpeedBox.Position = UDim2.new(0, 10, 0, 30)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SpeedBox.Text = "16"
 SpeedBox.TextColor3 = Color3.new(1,1,1)
-SpeedBox.Text = ""
+SpeedBox.Font = Enum.Font.Gotham
+SpeedBox.TextSize = 14
+Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 6)
+
+local ToggleBtn = Instance.new("TextButton", SpeedFrame)
+ToggleBtn.Size = UDim2.new(1, -20, 0, 25)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 65)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+ToggleBtn.Text = "Speed: OFF"
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextSize = 14
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 6)
 
 -- Icon
 local IconBtn = Instance.new("TextButton", ScreenGui)
@@ -130,7 +144,15 @@ local function refresh(mode)
             v:Destroy()
         end
     end
-    if mode ~= "Teleport" and mode ~= "Mute" then return end
+
+    if mode == "Teleport" or mode == "Mute" then
+        PlayerList.Visible = true
+        SpeedFrame.Visible = false
+    elseif mode == "Speed" then
+        PlayerList.Visible = false
+        SpeedFrame.Visible = true
+        return
+    end
 
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
@@ -159,22 +181,16 @@ local function refresh(mode)
     end
 end
 
--- Tab switching
 TeleportTab.MouseButton1Click:Connect(function()
-    PlayerList.Visible = true
-    SpeedFrame.Visible = false
     refresh("Teleport")
 end)
 
 MuteTab.MouseButton1Click:Connect(function()
-    PlayerList.Visible = true
-    SpeedFrame.Visible = false
     refresh("Mute")
 end)
 
 SpeedTab.MouseButton1Click:Connect(function()
-    PlayerList.Visible = false
-    SpeedFrame.Visible = true
+    refresh("Speed")
 end)
 
 MinBtn.MouseButton1Click:Connect(function()
@@ -247,18 +263,16 @@ end)
 SpeedBox.FocusLost:Connect(function()
     local val = tonumber(SpeedBox.Text)
     if val and val > 0 then
-        speedMultiplier = val
+        targetSpeed = val
     end
 end)
 
--- loop permanen (tiap frame paksa ulang WalkSpeed)
 RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local hum = LocalPlayer.Character.Humanoid
         if speedEnabled then
-            local target = 16 * speedMultiplier
-            if hum.WalkSpeed ~= target then
-                hum.WalkSpeed = target
+            if hum.WalkSpeed ~= targetSpeed then
+                hum.WalkSpeed = targetSpeed
             end
         else
             if hum.WalkSpeed ~= 16 then
@@ -268,7 +282,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- kalau respawn reset
 LocalPlayer.CharacterAdded:Connect(function(char)
     local hum = char:WaitForChild("Humanoid")
     if not speedEnabled then
@@ -276,5 +289,5 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- default buka teleport
+-- default buka Teleport
 refresh("Teleport")
