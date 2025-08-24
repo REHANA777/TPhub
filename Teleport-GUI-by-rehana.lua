@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
 local mutedPlayers = {}
 local speedEnabled = false
@@ -243,25 +244,33 @@ ToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-SpeedBox.FocusLost:Connect(function(enterPressed)
+SpeedBox.FocusLost:Connect(function()
     local val = tonumber(SpeedBox.Text)
     if val and val > 0 then
         speedMultiplier = val
-        if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = 16 * speedMultiplier
+    end
+end)
+
+-- updater global (jalan tiap frame)
+RunService.RenderStepped:Connect(function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local hum = LocalPlayer.Character.Humanoid
+        if speedEnabled then
+            hum.WalkSpeed = 16 * speedMultiplier
+        else
+            if hum.WalkSpeed ~= 16 then
+                hum.WalkSpeed = 16
+            end
         end
     end
 end)
 
--- auto apply saat jalan
+-- kalau respawn, reset speed
 LocalPlayer.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid")
-    char:WaitForChild("HumanoidRootPart")
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if speedEnabled and char and char:FindFirstChild("Humanoid") then
-            char.Humanoid.WalkSpeed = 16 * speedMultiplier
-        end
-    end)
+    if not speedEnabled then
+        char.Humanoid.WalkSpeed = 16
+    end
 end)
 
 -- default buka teleport
