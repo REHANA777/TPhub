@@ -14,17 +14,13 @@ MainFrame.Size = UDim2.new(0, 260, 0, 320)
 MainFrame.Position = UDim2.new(0.5, -130, 0.5, -160)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.BackgroundTransparency = 0.3
-
-local MainCorner = Instance.new("UICorner", MainFrame)
-MainCorner.CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
 -- Title bar
 local TitleBar = Instance.new("Frame", MainFrame)
 TitleBar.Size = UDim2.new(1, 0, 0, 35)
 TitleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-
-local TitleCorner = Instance.new("UICorner", TitleBar)
-TitleCorner.CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 12)
 
 local TitleText = Instance.new("TextLabel", TitleBar)
 TitleText.Size = UDim2.new(1, -70, 1, 0)
@@ -84,15 +80,13 @@ UIList.Padding = UDim.new(0, 4)
 
 -- Icon
 local IconBtn = Instance.new("TextButton", ScreenGui)
-IconBtn.Size = UDim2.new(0, 55, 0, 55)
-IconBtn.Position = UDim2.new(0, 20, 0.5, -25)
+IconBtn.Size = UDim2.new(0, 40, 0, 40) -- lebih kecil
+IconBtn.Position = UDim2.new(0, 20, 0.5, -20)
 IconBtn.Text = "TP"
 IconBtn.TextColor3 = Color3.new(1,1,1)
-IconBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 200)
+IconBtn.BackgroundColor3 = Color3.fromRGB(0,0,0) -- icon hitam
 IconBtn.Visible = false
-
-local IconCorner = Instance.new("UICorner", IconBtn)
-IconCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", IconBtn).CornerRadius = UDim.new(1, 0)
 
 -- Refresh players
 local function refresh(mode)
@@ -103,9 +97,10 @@ local function refresh(mode)
         if plr ~= LocalPlayer then
             local Btn = Instance.new("TextButton", PlayerList)
             Btn.Size = UDim2.new(1, -10, 0, 30)
-            Btn.Text = plr.Name
-            Btn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-            Btn.TextColor3 = Color3.new(1,1,1)
+            Btn.Text = "  " .. plr.Name -- ada spasi biar offset
+            Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            Btn.TextColor3 = Color3.fromRGB(0, 255, 0) -- hijau
+            Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.MouseButton1Click:Connect(function()
                 if mode == "Teleport" then
                     if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -114,10 +109,10 @@ local function refresh(mode)
                 elseif mode == "Mute" then
                     if mutedPlayers[plr.Name] then
                         mutedPlayers[plr.Name] = nil
-                        Btn.Text = plr.Name
+                        Btn.Text = "  " .. plr.Name
                     else
                         mutedPlayers[plr.Name] = true
-                        Btn.Text = plr.Name.." (Muted)"
+                        Btn.Text = "  " .. plr.Name .. " (Muted)"
                     end
                 end
             end)
