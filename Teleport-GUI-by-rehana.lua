@@ -78,9 +78,14 @@ PlayerList.ScrollBarThickness = 4
 local UIList = Instance.new("UIListLayout", PlayerList)
 UIList.Padding = UDim.new(0, 4)
 
+-- auto scroll
+UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    PlayerList.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + 10)
+end)
+
 -- Icon
 local IconBtn = Instance.new("TextButton", ScreenGui)
-IconBtn.Size = UDim2.new(0, 40, 0, 40) -- lebih kecil
+IconBtn.Size = UDim2.new(0, 40, 0, 40)
 IconBtn.Position = UDim2.new(0, 20, 0.5, -20)
 IconBtn.Text = "TP"
 IconBtn.TextColor3 = Color3.new(1,1,1)
@@ -90,16 +95,21 @@ Instance.new("UICorner", IconBtn).CornerRadius = UDim.new(1, 0)
 
 -- Refresh players
 local function refresh(mode)
-    PlayerList:ClearAllChildren()
-    local layout = UIList:Clone()
-    layout.Parent = PlayerList
+    -- hapus tombol lama
+    for _, v in ipairs(PlayerList:GetChildren()) do
+        if v:IsA("TextButton") then
+            v:Destroy()
+        end
+    end
+
+    -- bikin tombol baru
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             local Btn = Instance.new("TextButton", PlayerList)
             Btn.Size = UDim2.new(1, -10, 0, 30)
-            Btn.Text = "  " .. plr.Name -- ada spasi biar offset
+            Btn.Text = "  " .. plr.Name
             Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            Btn.TextColor3 = Color3.fromRGB(0, 255, 0) -- hijau
+            Btn.TextColor3 = Color3.fromRGB(0, 255, 0)
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.MouseButton1Click:Connect(function()
                 if mode == "Teleport" then
@@ -118,7 +128,6 @@ local function refresh(mode)
             end)
         end
     end
-    PlayerList.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y+10)
 end
 
 TeleportTab.MouseButton1Click:Connect(function()
@@ -181,10 +190,11 @@ if ChatEvents then
     if OnMessage then
         OnMessage.OnClientEvent:Connect(function(data)
             if mutedPlayers[data.FromSpeaker] then
-                data.Message = ""
+                data.Message = "" -- blok chat player yang di-mute
             end
         end)
     end
 end
 
+-- default buka teleport
 refresh("Teleport")
