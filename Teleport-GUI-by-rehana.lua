@@ -4,14 +4,16 @@ local CoreGui = game:GetService("CoreGui")
 local UIS = game:GetService("UserInputService")
 
 local mutedPlayers = {}
+local speedEnabled = false
+local speedMultiplier = 1
 
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
 ScreenGui.ResetOnSpawn = false
 
 -- Main GUI
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 260, 0, 320)
-MainFrame.Position = UDim2.new(0.5, -130, 0.5, -160)
+MainFrame.Size = UDim2.new(0, 260, 0, 360)
+MainFrame.Position = UDim2.new(0.5, -130, 0.5, -180)
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 MainFrame.BackgroundTransparency = 0.3
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
@@ -55,17 +57,24 @@ TabFrame.Position = UDim2.new(0, 0, 0, 35)
 TabFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 
 local TeleportTab = Instance.new("TextButton", TabFrame)
-TeleportTab.Size = UDim2.new(0.5, 0, 1, 0)
+TeleportTab.Size = UDim2.new(1/3, 0, 1, 0)
 TeleportTab.Text = "Teleport"
 TeleportTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 TeleportTab.TextColor3 = Color3.new(1,1,1)
 
 local MuteTab = Instance.new("TextButton", TabFrame)
-MuteTab.Size = UDim2.new(0.5, 0, 1, 0)
-MuteTab.Position = UDim2.new(0.5, 0, 0, 0)
+MuteTab.Size = UDim2.new(1/3, 0, 1, 0)
+MuteTab.Position = UDim2.new(1/3, 0, 0, 0)
 MuteTab.Text = "Mute"
 MuteTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 MuteTab.TextColor3 = Color3.new(1,1,1)
+
+local SpeedTab = Instance.new("TextButton", TabFrame)
+SpeedTab.Size = UDim2.new(1/3, 0, 1, 0)
+SpeedTab.Position = UDim2.new(2/3, 0, 0, 0)
+SpeedTab.Text = "Speed"
+SpeedTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+SpeedTab.TextColor3 = Color3.new(1,1,1)
 
 -- Player list
 local PlayerList = Instance.new("ScrollingFrame", MainFrame)
@@ -74,14 +83,34 @@ PlayerList.Position = UDim2.new(0, 0, 0, 65)
 PlayerList.BackgroundTransparency = 1
 PlayerList.CanvasSize = UDim2.new(0,0,0,0)
 PlayerList.ScrollBarThickness = 4
+PlayerList.Visible = true
 
 local UIList = Instance.new("UIListLayout", PlayerList)
 UIList.Padding = UDim.new(0, 4)
-
--- auto scroll
 UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     PlayerList.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + 10)
 end)
+
+-- Speed Settings Frame
+local SpeedFrame = Instance.new("Frame", MainFrame)
+SpeedFrame.Size = UDim2.new(1, -20, 1, -80)
+SpeedFrame.Position = UDim2.new(0, 10, 0, 70)
+SpeedFrame.BackgroundTransparency = 1
+SpeedFrame.Visible = false
+
+local ToggleBtn = Instance.new("TextButton", SpeedFrame)
+ToggleBtn.Size = UDim2.new(1, 0, 0, 40)
+ToggleBtn.Text = "Speed: OFF"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+
+local SpeedBox = Instance.new("TextBox", SpeedFrame)
+SpeedBox.Size = UDim2.new(1, 0, 0, 40)
+SpeedBox.Position = UDim2.new(0, 0, 0, 50)
+SpeedBox.PlaceholderText = "Enter Speed Multiplier (ex: 2)"
+SpeedBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SpeedBox.TextColor3 = Color3.new(1,1,1)
+SpeedBox.Text = ""
 
 -- Icon
 local IconBtn = Instance.new("TextButton", ScreenGui)
@@ -89,20 +118,19 @@ IconBtn.Size = UDim2.new(0, 40, 0, 40)
 IconBtn.Position = UDim2.new(0, 20, 0.5, -20)
 IconBtn.Text = "TP"
 IconBtn.TextColor3 = Color3.new(1,1,1)
-IconBtn.BackgroundColor3 = Color3.fromRGB(0,0,0) -- icon hitam
+IconBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
 IconBtn.Visible = false
 Instance.new("UICorner", IconBtn).CornerRadius = UDim.new(1, 0)
 
 -- Refresh players
 local function refresh(mode)
-    -- hapus tombol lama
     for _, v in ipairs(PlayerList:GetChildren()) do
         if v:IsA("TextButton") then
             v:Destroy()
         end
     end
+    if mode ~= "Teleport" and mode ~= "Mute" then return end
 
-    -- bikin tombol baru
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             local Btn = Instance.new("TextButton", PlayerList)
@@ -130,12 +158,22 @@ local function refresh(mode)
     end
 end
 
+-- Tab switching
 TeleportTab.MouseButton1Click:Connect(function()
+    PlayerList.Visible = true
+    SpeedFrame.Visible = false
     refresh("Teleport")
 end)
 
 MuteTab.MouseButton1Click:Connect(function()
+    PlayerList.Visible = true
+    SpeedFrame.Visible = false
     refresh("Mute")
+end)
+
+SpeedTab.MouseButton1Click:Connect(function()
+    PlayerList.Visible = false
+    SpeedFrame.Visible = true
 end)
 
 MinBtn.MouseButton1Click:Connect(function()
@@ -190,11 +228,41 @@ if ChatEvents then
     if OnMessage then
         OnMessage.OnClientEvent:Connect(function(data)
             if mutedPlayers[data.FromSpeaker] then
-                data.Message = "" -- blok chat player yang di-mute
+                data.Message = ""
             end
         end)
     end
 end
+
+-- Speed Hack
+ToggleBtn.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    ToggleBtn.Text = speedEnabled and "Speed: ON" or "Speed: OFF"
+    if not speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = 16
+    end
+end)
+
+SpeedBox.FocusLost:Connect(function(enterPressed)
+    local val = tonumber(SpeedBox.Text)
+    if val and val > 0 then
+        speedMultiplier = val
+        if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16 * speedMultiplier
+        end
+    end
+end)
+
+-- auto apply saat jalan
+LocalPlayer.CharacterAdded:Connect(function(char)
+    char:WaitForChild("Humanoid")
+    char:WaitForChild("HumanoidRootPart")
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if speedEnabled and char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = 16 * speedMultiplier
+        end
+    end)
+end)
 
 -- default buka teleport
 refresh("Teleport")
