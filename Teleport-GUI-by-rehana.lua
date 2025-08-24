@@ -251,12 +251,15 @@ SpeedBox.FocusLost:Connect(function()
     end
 end)
 
--- updater global (jalan tiap frame)
-RunService.RenderStepped:Connect(function()
+-- loop permanen (tiap frame paksa ulang WalkSpeed)
+RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local hum = LocalPlayer.Character.Humanoid
         if speedEnabled then
-            hum.WalkSpeed = 16 * speedMultiplier
+            local target = 16 * speedMultiplier
+            if hum.WalkSpeed ~= target then
+                hum.WalkSpeed = target
+            end
         else
             if hum.WalkSpeed ~= 16 then
                 hum.WalkSpeed = 16
@@ -265,11 +268,11 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- kalau respawn, reset speed
+-- kalau respawn reset
 LocalPlayer.CharacterAdded:Connect(function(char)
-    char:WaitForChild("Humanoid")
+    local hum = char:WaitForChild("Humanoid")
     if not speedEnabled then
-        char.Humanoid.WalkSpeed = 16
+        hum.WalkSpeed = 16
     end
 end)
 
