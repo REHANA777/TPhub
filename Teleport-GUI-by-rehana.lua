@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 
 local mutedPlayers = {}
 local speedEnabled = false
-local targetSpeed = 16
+local speedValue = 16
 
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
 ScreenGui.ResetOnSpawn = false
@@ -79,7 +79,7 @@ SpeedTab.TextColor3 = Color3.new(1,1,1)
 
 -- Player list
 local PlayerList = Instance.new("ScrollingFrame", MainFrame)
-PlayerList.Size = UDim2.new(1, 0, 1, -65)
+PlayerList.Size = UDim2.new(1, 0, 1, -95)
 PlayerList.Position = UDim2.new(0, 0, 0, 65)
 PlayerList.BackgroundTransparency = 1
 PlayerList.CanvasSize = UDim2.new(0,0,0,0)
@@ -87,45 +87,30 @@ PlayerList.ScrollBarThickness = 4
 
 local UIList = Instance.new("UIListLayout", PlayerList)
 UIList.Padding = UDim.new(0, 4)
-UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    PlayerList.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y + 10)
-end)
 
--- Speed frame
+-- Speed settings
 local SpeedFrame = Instance.new("Frame", MainFrame)
 SpeedFrame.Size = UDim2.new(1, -20, 0, 80)
 SpeedFrame.Position = UDim2.new(0, 10, 0, 65)
 SpeedFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 SpeedFrame.Visible = false
-Instance.new("UICorner", SpeedFrame).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", SpeedFrame).CornerRadius = UDim.new(0, 10)
 
-local SpeedLabel = Instance.new("TextLabel", SpeedFrame)
-SpeedLabel.Size = UDim2.new(1, 0, 0, 25)
-SpeedLabel.BackgroundTransparency = 1
-SpeedLabel.Text = "Set Speed:"
-SpeedLabel.TextColor3 = Color3.new(1,1,1)
-SpeedLabel.Font = Enum.Font.GothamBold
-SpeedLabel.TextSize = 14
+local ToggleBtn = Instance.new("TextButton", SpeedFrame)
+ToggleBtn.Size = UDim2.new(1, -20, 0, 30)
+ToggleBtn.Position = UDim2.new(0, 10, 0, 10)
+ToggleBtn.Text = "Speed: OFF"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+ToggleBtn.TextColor3 = Color3.new(1,1,1)
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 6)
 
 local SpeedBox = Instance.new("TextBox", SpeedFrame)
 SpeedBox.Size = UDim2.new(1, -20, 0, 30)
-SpeedBox.Position = UDim2.new(0, 10, 0, 30)
+SpeedBox.Position = UDim2.new(0, 10, 0, 45)
+SpeedBox.PlaceholderText = "Set Speed"
 SpeedBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-SpeedBox.Text = "16"
 SpeedBox.TextColor3 = Color3.new(1,1,1)
-SpeedBox.Font = Enum.Font.Gotham
-SpeedBox.TextSize = 14
 Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 6)
-
-local ToggleBtn = Instance.new("TextButton", SpeedFrame)
-ToggleBtn.Size = UDim2.new(1, -20, 0, 25)
-ToggleBtn.Position = UDim2.new(0, 10, 0, 65)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-ToggleBtn.Text = "Speed: OFF"
-ToggleBtn.TextColor3 = Color3.new(1,1,1)
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextSize = 14
-Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 6)
 
 -- Icon
 local IconBtn = Instance.new("TextButton", ScreenGui)
@@ -139,21 +124,9 @@ Instance.new("UICorner", IconBtn).CornerRadius = UDim.new(1, 0)
 
 -- Refresh players
 local function refresh(mode)
-    for _, v in ipairs(PlayerList:GetChildren()) do
-        if v:IsA("TextButton") then
-            v:Destroy()
-        end
-    end
-
-    if mode == "Teleport" or mode == "Mute" then
-        PlayerList.Visible = true
-        SpeedFrame.Visible = false
-    elseif mode == "Speed" then
-        PlayerList.Visible = false
-        SpeedFrame.Visible = true
-        return
-    end
-
+    PlayerList:ClearAllChildren()
+    local layout = UIList:Clone()
+    layout.Parent = PlayerList
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             local Btn = Instance.new("TextButton", PlayerList)
@@ -179,18 +152,24 @@ local function refresh(mode)
             end)
         end
     end
+    PlayerList.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y+10)
 end
 
 TeleportTab.MouseButton1Click:Connect(function()
+    PlayerList.Visible = true
+    SpeedFrame.Visible = false
     refresh("Teleport")
 end)
 
 MuteTab.MouseButton1Click:Connect(function()
+    PlayerList.Visible = true
+    SpeedFrame.Visible = false
     refresh("Mute")
 end)
 
 SpeedTab.MouseButton1Click:Connect(function()
-    refresh("Speed")
+    PlayerList.Visible = false
+    SpeedFrame.Visible = true
 end)
 
 MinBtn.MouseButton1Click:Connect(function()
@@ -251,7 +230,7 @@ if ChatEvents then
     end
 end
 
--- Speed Hack
+-- Speed hack
 ToggleBtn.MouseButton1Click:Connect(function()
     speedEnabled = not speedEnabled
     ToggleBtn.Text = speedEnabled and "Speed: ON" or "Speed: OFF"
@@ -263,7 +242,7 @@ end)
 SpeedBox.FocusLost:Connect(function()
     local val = tonumber(SpeedBox.Text)
     if val and val > 0 then
-        targetSpeed = val
+        speedValue = val
     end
 end)
 
@@ -271,8 +250,8 @@ RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         local hum = LocalPlayer.Character.Humanoid
         if speedEnabled then
-            if hum.WalkSpeed ~= targetSpeed then
-                hum.WalkSpeed = targetSpeed
+            if hum.WalkSpeed ~= speedValue then
+                hum.WalkSpeed = speedValue
             end
         else
             if hum.WalkSpeed ~= 16 then
@@ -289,5 +268,4 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- default buka Teleport
 refresh("Teleport")
