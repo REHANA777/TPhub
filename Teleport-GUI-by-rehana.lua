@@ -7,6 +7,7 @@ local RunService = game:GetService("RunService")
 local mutedPlayers = {}
 local speedEnabled = false
 local speedValue = 16
+local currentMode = "Teleport"
 
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
 ScreenGui.ResetOnSpawn = false
@@ -60,7 +61,7 @@ TabFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 local TeleportTab = Instance.new("TextButton", TabFrame)
 TeleportTab.Size = UDim2.new(0.33, 0, 1, 0)
 TeleportTab.Text = "Teleport"
-TeleportTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+TeleportTab.BackgroundColor3 = Color3.fromRGB(100, 170, 100) -- aktif default
 TeleportTab.TextColor3 = Color3.new(1,1,1)
 
 local MuteTab = Instance.new("TextButton", TabFrame)
@@ -87,6 +88,11 @@ PlayerList.ScrollBarThickness = 4
 
 local UIList = Instance.new("UIListLayout", PlayerList)
 UIList.Padding = UDim.new(0, 4)
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+
+UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    PlayerList.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y + 10)
+end)
 
 -- Speed settings
 local SpeedFrame = Instance.new("Frame", MainFrame)
@@ -124,9 +130,13 @@ Instance.new("UICorner", IconBtn).CornerRadius = UDim.new(1, 0)
 
 -- Refresh players
 local function refresh(mode)
-    PlayerList:ClearAllChildren()
-    local layout = UIList:Clone()
-    layout.Parent = PlayerList
+    currentMode = mode
+    for _, child in ipairs(PlayerList:GetChildren()) do
+        if not child:IsA("UIListLayout") then
+            child:Destroy()
+        end
+    end
+    
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
             local Btn = Instance.new("TextButton", PlayerList)
@@ -135,6 +145,8 @@ local function refresh(mode)
             Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
             Btn.TextColor3 = Color3.fromRGB(0, 255, 0)
             Btn.TextXAlignment = Enum.TextXAlignment.Left
+            Btn.LayoutOrder = #PlayerList:GetChildren()
+
             Btn.MouseButton1Click:Connect(function()
                 if mode == "Teleport" then
                     if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -152,24 +164,34 @@ local function refresh(mode)
             end)
         end
     end
-    PlayerList.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y+10)
+end
+
+-- Tab highlight function
+local function setActiveTab(tab)
+    TeleportTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    MuteTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    SpeedTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    tab.BackgroundColor3 = Color3.fromRGB(100, 170, 100)
 end
 
 TeleportTab.MouseButton1Click:Connect(function()
     PlayerList.Visible = true
     SpeedFrame.Visible = false
+    setActiveTab(TeleportTab)
     refresh("Teleport")
 end)
 
 MuteTab.MouseButton1Click:Connect(function()
     PlayerList.Visible = true
     SpeedFrame.Visible = false
+    setActiveTab(MuteTab)
     refresh("Mute")
 end)
 
 SpeedTab.MouseButton1Click:Connect(function()
     PlayerList.Visible = false
     SpeedFrame.Visible = true
+    setActiveTab(SpeedTab)
 end)
 
 MinBtn.MouseButton1Click:Connect(function()
@@ -265,6 +287,19 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     local hum = char:WaitForChild("Humanoid")
     if not speedEnabled then
         hum.WalkSpeed = 16
+    end
+end)
+
+-- Auto refresh saat ada player join/leave
+Players.PlayerAdded:Connect(function()
+    if PlayerList.Visible then
+        refresh(currentMode)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function()
+    if PlayerList.Visible then
+        refresh(currentMode)
     end
 end)
 
