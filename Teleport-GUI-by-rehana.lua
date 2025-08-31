@@ -79,13 +79,6 @@ SpeedTab.Text = "Speed"
 SpeedTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 SpeedTab.TextColor3 = Color3.new(1,1,1)
 
-local InfJumpTab = Instance.new("TextButton", TabFrame)
-InfJumpTab.Size = UDim2.new(0.34, 0, 1, 0)
-InfJumpTab.Position = UDim2.new(0.66, 0, 0, 0)
-InfJumpTab.Text = "Jump"
-InfJumpTab.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-InfJumpTab.TextColor3 = Color3.new(1,1,1)
-
 -- Player list
 local PlayerList = Instance.new("ScrollingFrame", MainFrame)
 PlayerList.Size = UDim2.new(1, 0, 1, -95)
